@@ -1,0 +1,38 @@
+# Python cache files
+
+**pycache**/
+*.py[cod]
+.pytest_cache/
+
+# Virtual environments
+
+.venv/
+venv/
+env/
+
+# Environment variables and API keys
+
+.env
+.env.*
+!.env.example
+
+# IDE and operating system files
+
+.DS_Store
+.vscode/
+
+# Generated databases and vector stores
+
+#chroma_db/
+
+data/manifest.db 
+
+# Generated data (uncomment if you don't want to upload these)
+
+ data/raw/
+
+ data/processed/
+
+ data/index/
+
+ data/chunks/
