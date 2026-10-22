@@ -1,0 +1,8 @@
+
+{
+    "dense_weight": 0.5,
+    "sparse_weight": 0.5,
+    "final_k": 8,
+    "reranker_model": "BAAI/bge-reranker-base"
+  }
+  

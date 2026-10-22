@@ -1,0 +1,7 @@
+{
+    "provider": "groq",
+    "model": "openai/gpt-oss-120b",
+    "api_key_env": "GROQ_API_KEY",
+    "min_retrieval_confidence": 0.01,
+    "context_chunks": 8
+  }

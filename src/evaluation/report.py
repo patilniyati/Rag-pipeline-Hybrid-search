@@ -16,7 +16,7 @@ def summarize(rows: list[dict]) -> dict:
     answerable = [r for r in rows if r["type"] in ("lookup", "multi_hop")]
     unanswerable = [r for r in rows if r["type"] == "unanswerable"]
     return {
-        "Retrieval hit@5": mean(x["hit"] for x in ret),
+        "Retrieval hit@8": mean(x["hit"] for x in ret),
         "Retrieval MRR": mean(x["mrr"] for x in ret),
         "Multi-hop: all evidence retrieved": mean(x["all_found"] for x in multi),
         "Answer correctness": mean(r.get("correctness") for r in rows),
