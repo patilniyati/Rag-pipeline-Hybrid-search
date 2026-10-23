@@ -2,7 +2,9 @@
 {
     "dense_weight": 0.5,
     "sparse_weight": 0.5,
-    "final_k": 8,
+    "final_k": 8, "dense_k": 20,
+    "sparse_k": 20, 
+    "rerank_candidates": 30,
     "reranker_model": "BAAI/bge-reranker-base"
   }
   
