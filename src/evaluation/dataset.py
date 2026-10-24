@@ -133,3 +133,16 @@ def describe(cases: list[dict]) -> str:
     by_type = Counter(c["type"] for c in cases)
     by_split = Counter(c["split"] for c in cases)
     return f"{len(cases)} cases | types {dict(by_type)} | splits {dict(by_split)}"
+
+def stratified_sample(cases: list[dict], n: int) -> list[dict]:
+    """About n cases, in proportion to each type. Deterministic."""
+    import random
+    by_type: dict[str, list[dict]] = {}
+    for c in cases:
+        by_type.setdefault(c["type"], []).append(c)
+    rng, picked = random.Random(7), []
+    for t in sorted(by_type):
+        group = sorted(by_type[t], key=lambda c: c["id"])
+        k = max(1, round(n * len(group) / len(cases)))
+        picked += rng.sample(group, min(k, len(group)))
+    return sorted(picked, key=lambda c: c["id"])

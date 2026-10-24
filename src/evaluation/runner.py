@@ -9,6 +9,7 @@ from src.generation.llm import make_llm
 from src.generation.settings import load_generation_settings
 from src.retrieval.retriever import Retriever
 from src.retrieval.settings import load_retrieval_settings
+from src.generation.llm import USAGE, DailyLimitError, make_llm
 
 from .judges import judge_correctness, judge_faithfulness
 from .retrieval_metrics import retrieval_scores
@@ -68,8 +69,15 @@ def full_row(case, answerer, judge, separate):
     else:
         correctness, why = judge_correctness(case["question"], a.text, case["answer"], case["type"], judge)
 
-    faith, unsupported = (judge_faithfulness([c["claim"] for c in a.citations], ctx, judge)
-                          if answered else (None, []))
+    faith, unsupported = None, []
+    if answered and claims:
+        rest = [c["claim"] for c in claims if c["status"] != "verified"]
+        if not rest:
+            faith = 1.0                                   # every claim has a supporting cited block
+        else:
+            score, unsupported = judge_faithfulness(rest, ctx, judge)
+            faith = None if score is None else round(1 - len(unsupported) / len(claims), 3)
+            
     precision, coverage = citation_scores(claims) if answered else (None, None)
     return {**_base(case), "status": a.status, "answer": a.text, "contexts": ctx,
             "retrieval": retrieval_scores(ctx, case["evidence"]) if case["evidence"] else None,
@@ -100,14 +108,21 @@ def run_strategy(strategy: str, cases: list[dict], run_dir: Path, retrieval_only
         make_row = lambda case: full_row(case, answerer, judge, separate)
 
     with out.open("a", encoding="utf-8") as f:
+
         for i, case in enumerate(todo, 1):
+            before = USAGE["tokens"]
             try:
                 row = make_row(case)
-            except Exception as e:                            # rate limit, bad JSON, etc.
+            except DailyLimitError as e:
+                print(f"  STOPPED: {e}\n  Finished cases are saved; rerun with the same --label later.")
+                raise
+            except Exception as e:                            # bad JSON, transient error, etc.
                 print(f"  FAILED {case['id']}: {e}")
-                continue                                      # not saved, so a rerun retries it
+                continue
+            row["tokens"] = USAGE["tokens"] - before          # cost per case, saved with the row
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
             f.flush()
-            print(f"  [{strategy}] {i}/{len(todo)} {case['id']}")
+            print(f"  [{strategy}] {i}/{len(todo)} {case['id']} ({row['tokens']} tokens)")
             if es.case_delay_s and not retrieval_only:
                 time.sleep(es.case_delay_s)
+        

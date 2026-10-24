@@ -17,6 +17,7 @@ class GenerationSettings:
     w_retrieval: float = 0.4
     w_coverage: float = 0.4
     w_completeness: float = 0.2
+    reasoning_effort: str = ""        # "low" | "medium" | "high" (gpt-oss models on Groq)
 
 
 def load_generation_settings(path: str = "generation_config.json") -> GenerationSettings:

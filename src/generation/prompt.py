@@ -12,7 +12,11 @@ Rules:
 4. If the context does not contain enough information to answer, reply with exactly
    {NO_ANSWER} followed by one sentence saying what is missing.
 5. If only part of the question can be answered, answer that part and state which
-   part the context does not cover."""
+   part the context does not cover.
+6. If the question is vague and the context supports several distinct readings
+   (different objects, processes or situations), do not blend them into one answer.
+   Say the question has more than one reading, then give a short cited answer for
+   each reading, or state which detail is needed to choose."""
 
 
 def _where(c: dict) -> str:

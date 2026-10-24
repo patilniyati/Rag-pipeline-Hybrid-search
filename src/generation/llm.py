@@ -5,16 +5,34 @@ import requests
 
 from .settings import GenerationSettings
 
+USAGE = {"tokens": 0, "calls": 0}
+
+
+class DailyLimitError(RuntimeError):
+    """The provider's daily budget is spent. Retrying cannot help."""
+
+
+def _tokens(data: dict) -> int:
+    u = data.get("usage") or data.get("usageMetadata") or {}
+    n = u.get("total_tokens") or u.get("totalTokenCount")
+    return n or data.get("prompt_eval_count", 0) + data.get("eval_count", 0)   # Ollama
+
 
 def _post(url, body, headers, timeout, retries=4):
     for attempt in range(retries):
         r = requests.post(url, json=body, headers=headers, timeout=timeout)
+        low = r.text.lower()
+        if r.status_code == 429 and any(k in low for k in ("per day", "perday", "(tpd)")):
+            raise DailyLimitError(f"Daily limit reached: {r.text[:200]}")
         if r.status_code in (429, 500, 503) and attempt < retries - 1:
-            time.sleep(2 ** (attempt + 1))           # back off on rate limits
+            time.sleep(2 ** (attempt + 1))
             continue
         if not r.ok:
             raise RuntimeError(f"LLM request failed ({r.status_code}): {r.text[:300]}")
-        return r.json()
+        data = r.json()
+        USAGE["tokens"] += _tokens(data)
+        USAGE["calls"] += 1
+        return data
 
 
 class LLM:
@@ -77,6 +95,10 @@ class GroqLLM(LLM):
                 "temperature": self.s.temperature}
         if json_mode:
             body["response_format"] = {"type": "json_object"}
+
+        if self.s.reasoning_effort:
+            body["reasoning_effort"] = self.s.reasoning_effort
+            
         data = _post("https://api.groq.com/openai/v1/chat/completions", body,
                      {"Authorization": f"Bearer {self.key}"}, self.s.timeout_s)
         return data["choices"][0]["message"]["content"]

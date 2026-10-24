@@ -20,6 +20,7 @@ class Answer:
     found: list = field(default_factory=list)           # "I don't know": what was retrieved
     not_found: str = ""                                 # "I don't know": what is missing
     suggested_documents: list = field(default_factory=list)
+    contexts: list = field(default_factory=list)      # the chunks the model was shown
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -51,6 +52,7 @@ class Answerer:
         complete, missing = conf.completeness(question, raw, self.llm)
         return Answer(
             status="answered", text=raw, citations=claims,
+            contexts=chunks,
             flags=[c for c in claims if c["status"] != "verified"],
             confidence={"retrieval": r_conf, "citation_coverage": coverage,
                         "completeness": complete, "missing_parts": missing,
@@ -64,6 +66,7 @@ class Answerer:
         return Answer(
             status="insufficient",
             text="I don't have enough information in the indexed documents to answer this.",
+            contexts=chunks,
             confidence={"retrieval": r_conf, "composite": r_conf},
             found=found,
             not_found=reason or f"None of the retrieved passages answer: {question!r}",
