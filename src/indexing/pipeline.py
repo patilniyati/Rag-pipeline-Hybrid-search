@@ -7,7 +7,7 @@ from . import keyword
 from .dedup import find_duplicates
 from .embedder import Embedder
 from .settings import Settings
-from .store import VectorStore
+from .store import open_store
 
 
 def load_chunks(folder: Path) -> list[dict]:
@@ -23,7 +23,7 @@ def load_chunks(folder: Path) -> list[dict]:
 def index_chunks(chunks: list[dict], s: Settings, name: str) -> dict:
     root = Path(s.index_root) / name
     root.mkdir(parents=True, exist_ok=True)
-    store = VectorStore(root / "chroma", s.model)
+    store = open_store(name, s)
 
     current = {c["chunk_id"] for c in chunks}
     store.delete(store.ids() - current)                     # chunks that no longer exist
@@ -54,7 +54,7 @@ def index_chunks(chunks: list[dict], s: Settings, name: str) -> dict:
 
 def check_sync(s: Settings, name: str) -> bool:
     root = Path(s.index_root) / name
-    chroma_ids = VectorStore(root / "chroma", s.model).ids()
+    chroma_ids = open_store(name, s).ids()
     path = root / "bm25.pkl"
     bm25_ids = set(keyword.load(path)["ids"]) if path.exists() else set()
     print(f"chroma={len(chroma_ids)} bm25={len(bm25_ids)} -> "

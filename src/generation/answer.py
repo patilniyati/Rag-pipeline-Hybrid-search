@@ -10,6 +10,7 @@ from .prompt import NO_ANSWER, build_prompt
 from .settings import load_generation_settings
 
 
+
 @dataclass
 class Answer:
     status: str                       # "answered" or "insufficient"
@@ -21,6 +22,7 @@ class Answer:
     not_found: str = ""                                 # "I don't know": what is missing
     suggested_documents: list = field(default_factory=list)
     contexts: list = field(default_factory=list)      # the chunks the model was shown
+    
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -32,10 +34,16 @@ class Answerer:
         # this layer owns the relevance threshold, so switch the retriever's own cutoff off
         no_cutoff = replace(load_retrieval_settings(), min_rerank_score=-1e9)
         self.retriever = Retriever(strategy, settings=no_cutoff)
-        self.llm = make_llm(self.s)
+        self._llm = None
+    
+    @property
+    def llm(self):                       # created on first use, so /search works without an API key
+        if self._llm is None:
+            self._llm = make_llm(self.s)
+        return self._llm
 
-    def ask(self, question: str) -> Answer:
-        chunks = self.retriever.search(question)[: self.s.context_chunks]
+    def ask(self, question: str, mode: str = "hybrid") -> Answer:
+        chunks = self.retriever.search(question, mode=mode)[: self.s.context_chunks]
         r_conf = conf.retrieval_confidence(chunks)
         if not chunks or r_conf < self.s.min_retrieval_confidence:
             return self._insufficient(question, chunks, r_conf)

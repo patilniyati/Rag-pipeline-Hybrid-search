@@ -14,9 +14,9 @@ Rules:
 5. If only part of the question can be answered, answer that part and state which
    part the context does not cover.
 6. If the question is vague and the context supports several distinct readings
-   (different objects, processes or situations), do not blend them into one answer.
-   Say the question has more than one reading, then give a short cited answer for
-   each reading, or state which detail is needed to choose."""
+   (different objects, processes or situations), do not answer with just one.
+   Begin with: "This question has more than one reading:" and give each reading
+   one short cited sentence. Only skip this when the context supports one reading."""
 
 
 def _where(c: dict) -> str:

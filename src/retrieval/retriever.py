@@ -3,7 +3,7 @@ from pathlib import Path
 from src.indexing import keyword
 from src.indexing.embedder import Embedder
 from src.indexing.settings import load_settings
-from src.indexing.store import VectorStore
+from src.indexing.store import open_store
 
 from .dense import DenseRetriever
 from .fusion import weighted_rrf
@@ -17,7 +17,7 @@ class Retriever:
         idx = index_settings or load_settings()          # how the index was built
         self.s = settings or load_retrieval_settings()   # how we search it
         root = Path(idx.index_root) / strategy
-        self.store = VectorStore(root / "chroma", idx.model)
+        self.store = open_store(strategy, idx)
         self.dense = DenseRetriever(self.store, Embedder(idx))
         self.sparse = SparseRetriever(keyword.load(root / "bm25.pkl"))
         self._reranker = None                            # loaded only when first needed

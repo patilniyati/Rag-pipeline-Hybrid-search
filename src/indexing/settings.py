@@ -1,4 +1,5 @@
 import json
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -11,6 +12,8 @@ class Settings:
     doc_prefix: str = ""
     dup_threshold: float = 0.95
     index_root: str = "data/index"
+    chroma_host: str = ""        # empty = on-disk Chroma; set = Chroma server
+    chroma_port: int = 8000
 
 
 def load_settings(path: str = "index_config.json") -> Settings:
@@ -20,4 +23,8 @@ def load_settings(path: str = "index_config.json") -> Settings:
         for key, value in json.loads(p.read_text()).items():
             if hasattr(s, key):
                 setattr(s, key, value)
+    if os.getenv("CHROMA_HOST"):
+        s.chroma_host = os.environ["CHROMA_HOST"]
+    if os.getenv("CHROMA_PORT"):
+        s.chroma_port = int(os.environ["CHROMA_PORT"])
     return s

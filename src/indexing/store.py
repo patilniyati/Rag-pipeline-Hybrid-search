@@ -1,15 +1,18 @@
 import chromadb
 import numpy as np
+from pathlib import Path
 
 
 class VectorStore:
-    def __init__(self, path, model: str):
-        client = chromadb.PersistentClient(path=str(path))
+
+    def __init__(self, path, model: str, name: str = "chunks", host: str = "", port: int = 8000):
+        client = (chromadb.HttpClient(host=host, port=port) if host
+                  else chromadb.PersistentClient(path=str(path)))
         self.col = client.get_or_create_collection(
-            "chunks", metadata={"hnsw:space": "cosine", "model": model})
+            name, metadata={"hnsw:space": "cosine", "model": model})
         if self.col.metadata.get("model") != model:
             raise RuntimeError("This index was built with a different model. "
-                               "Run again with --rebuild.")
+                               "Delete the index and rebuild.")
 
     def ids(self) -> set:
         return set(self.col.get(include=[])["ids"])
@@ -46,3 +49,9 @@ def _metadata(c: dict) -> dict:
             "heading": " > ".join(c.get("heading_path") or []),
             "strategy": c.get("strategy", ""), "char_count": len(c["text"]),
             "page": page if page is not None else -1, "format": c.get("format", "")}
+
+def open_store(strategy: str, s) -> VectorStore:
+    """The one place that decides where vectors live."""
+    name = f"chunks_{strategy}" if s.chroma_host else "chunks"
+    return VectorStore(Path(s.index_root) / strategy / "chroma", s.model,
+                       name, s.chroma_host, s.chroma_port)
