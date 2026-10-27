@@ -1,0 +1,12 @@
+.venv
+.git
+.env
+data
+eval/runs
+__pycache__
+*.pyc
+data_debug
+sample_docs
+sample_docs_debug
+corpus_k8s
+tmp_k8s

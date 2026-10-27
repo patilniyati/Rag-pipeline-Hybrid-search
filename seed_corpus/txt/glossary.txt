@@ -1,0 +1,19 @@
+NORTHSTAR RELAY GLOSSARY
+
+API p95: The latency value at or below which 95 percent of measured requests complete. In this corpus, the API objective applies to successful job-acceptance requests, not the asynchronous work duration.
+
+DLQ: Dead-letter queue. Holds jobs that exceeded the configured processing-attempt limit or otherwise require operator inspection.
+
+DLQ-17: Diagnostic code used when a job exceeds eight processing attempts and is moved to the dead-letter queue.
+
+Idempotency-Key: Client-supplied identifier for treating repeated POST /v2/jobs submissions with the same normalized body as the same operation for 24 hours.
+
+Request ID: Correlation identifier for tracing a single HTTP request through logs. It is not a secret and should be included in sanitized support tickets.
+
+Workspace: Tenant boundary used for rate limits, API key authorization, jobs, and export permissions.
+
+At-least-once delivery: A message may be delivered again when acknowledgement is missing. Consumers must deduplicate to avoid repeating side effects.
+
+Canary: A deployment stage in which a small portion of traffic (10 percent in the standard rollout) is directed to a new version before a broader rollout.
+
+UTC cutoff: A fixed UTC timestamp used to determine daily export eligibility. It must not be interpreted in the client machine's local timezone.

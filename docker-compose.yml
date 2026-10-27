@@ -1,0 +1,57 @@
+x-app-env: &app-env
+  CHROMA_HOST: chroma
+  STRATEGIES: recursive
+  DEFAULT_STRATEGY: recursive
+
+services:
+  chroma:
+    # Use the SAME version as the chromadb package in requirements-api.txt
+    image: chromadb/chroma:1.5.9
+    environment:
+      IS_PERSISTENT: "TRUE"
+      ANONYMIZED_TELEMETRY: "FALSE"
+    volumes:
+      - chroma_data:/data          # check the image docs for your version's persist path
+    restart: unless-stopped        # no published port: only the other services can reach it
+
+  seed:                            # one-shot: indexes seed_corpus/, then exits
+    image: rag-api
+    build: { context: ., dockerfile: Dockerfile.api }
+    command: python -m src.api.seed
+    environment: *app-env
+    volumes:
+      - app_data:/app/data
+    depends_on: [chroma]
+    restart: "no"
+
+  api:
+    image: rag-api
+    env_file: .env
+    environment:
+      <<: *app-env
+      API_KEY: ${API_KEY:-}
+    ports: ["8000:8000"]
+    volumes:
+      - app_data:/app/data
+    depends_on:
+      chroma: { condition: service_started }
+      seed: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/v1/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 90s
+
+  dashboard:
+    build: { context: ., dockerfile: Dockerfile.dashboard }
+    environment:
+      API_URL: http://api:8000
+      API_KEY: ${API_KEY:-}
+    ports: ["8501:8501"]
+    depends_on:
+      api: { condition: service_healthy }
+
+volumes:
+  chroma_data:
+  app_data:

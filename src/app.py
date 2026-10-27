@@ -37,6 +37,9 @@ class RagApp:
         """Raw store -> sections -> chunks -> both indexes, for every served strategy."""
         with self._build_lock:
             add(folder)
+            if not Path("data/processed").exists():
+                raise RuntimeError(f"Nothing was ingested from {folder!r}. "
+                                   "Is the folder empty or are all files unsupported?")
             s, stats = load_settings(), {}
             for name in self.strategies:
                 chunk_all(name)

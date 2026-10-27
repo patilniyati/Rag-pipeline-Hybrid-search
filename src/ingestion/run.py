@@ -34,12 +34,19 @@ def process(raw_file: Path, doc_id: str, source: str):
                LOADER_VERSION, "failed", str(e))
         print(f"FAIL  {source}: {e}")
 
+
 def add(folder: str):
-    for path in sorted(Path(folder).iterdir()):
-        if path.name.startswith(".") or path.is_dir():
+    for path in sorted(Path(folder).rglob("*")):
+        if path.name.startswith(".") or not path.is_file():
+            continue
+        if path.suffix.lower() not in {".pdf", ".html", ".htm", ".md", ".txt"}:
             continue
         doc_id = save_raw(path)
-        process(RAW_DIR / doc_id / f"original{path.suffix.lower()}", doc_id, path.name)
+        process(
+            RAW_DIR / doc_id / f"original{path.suffix.lower()}",
+            doc_id,
+            path.name,
+        )
 
 def reindex():
     for d in sorted(RAW_DIR.iterdir()):

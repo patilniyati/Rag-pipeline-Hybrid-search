@@ -1,0 +1,22 @@
+WORKSPACE LIMITS FAQ
+
+Q: Is the POST /v2/jobs limit per API key?
+A: No. The standard limit is 120 requests per minute per workspace, with a burst allowance of 20. Multiple keys in one workspace share the same limit.
+
+Q: What should a client do after HTTP 429?
+A: Honor Retry-After, then retry with exponential backoff and jitter. Do not immediately replay the request in a tight loop.
+
+Q: How many jobs can be active in one workspace?
+A: The standard active-job cap is 2,500. Completed jobs do not count toward the active-job cap, though their metadata remains subject to its own retention period.
+
+Q: What is the maximum size for a single export file before multipart packaging?
+A: Exports larger than 5 GB are packaged as numbered parts with a manifest and per-part checksums.
+
+Q: Who can re-drive a dead-letter job?
+A: An on-call operator. A reporting identity can read status and export metadata but cannot redrive jobs.
+
+Q: When is the daily export cutoff?
+A: 02:00 UTC. Records created at or after that cutoff are eligible for the following daily export.
+
+Q: How long is an API key valid?
+A: Production keys should be rotated every 90 days. After rotation, the former key has a 24-hour overlap window, after which it should be revoked. This is distinct from the 24-hour idempotency-key retention period.

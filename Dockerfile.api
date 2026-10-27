@@ -1,0 +1,23 @@
+FROM python:3.13-slim
+ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 HF_HOME=/models
+WORKDIR /app
+
+COPY requirements-api.txt .
+RUN pip install --extra-index-url https://download.pytorch.org/whl/cpu torch \
+ && pip install -r requirements-api.txt
+
+# Bake the models into the image so the first start needs no download.
+# Keep these in sync with index_config.json and retrieval_config.json.
+ARG EMBED_MODEL=BAAI/bge-small-en-v1.5
+ARG RERANK_MODEL=BAAI/bge-reranker-base
+RUN python -c "from sentence_transformers import SentenceTransformer, CrossEncoder; SentenceTransformer('${EMBED_MODEL}'); CrossEncoder('${RERANK_MODEL}')"
+ENV HF_HUB_OFFLINE=1
+
+COPY *.json ./
+COPY src ./src
+COPY seed_corpus ./seed_corpus
+
+RUN useradd -m app && mkdir -p data && chown -R app /app /models
+USER app
+EXPOSE 8000
+CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

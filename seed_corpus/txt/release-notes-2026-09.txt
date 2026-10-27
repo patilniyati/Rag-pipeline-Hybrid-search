@@ -1,0 +1,16 @@
+NORTHSTAR RELAY RELEASE NOTES
+Release window: September 2026
+
+2026-09-22 - Webhook diagnostics
+Added event ID, delivery attempt, response class, and correlation value to the delivery log. Signing secrets and raw payload bodies remain redacted. Retry behavior remains up to six attempts over a 24-hour window.
+
+2026-09-10 - Multipart exports
+Exports larger than 5 GB are split into numbered parts. A manifest provides a checksum for each part. Download all parts and verify the checksums before reassembly. Retrying a failed export creates a new export job ID; the old download URL is not resumed.
+
+2026-09-03 - Workspace reporting role
+A reporting identity can read job status and export metadata but cannot redrive dead-letter jobs or change workspace permissions. Redrive remains an on-call operator action.
+
+2026-08-28 - Queue observability
+Added oldest dispatch-message age and DLQ-17 volume to the operator dashboard. Investigation thresholds are documented in the Reliability SLO and Alerts policy.
+
+Compatibility note: these release notes do not supersede the current security, retention, or reliability policies.

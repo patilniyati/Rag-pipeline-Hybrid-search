@@ -1,0 +1,19 @@
+NORTHSTAR RELAY - KNOWN ISSUES
+Updated: 2026-10-01
+
+ISSUE NS-431: Export dashboard timezone display
+Symptom: The dashboard may display the next-export cutoff in the browser's local timezone, even though the export scheduler always evaluates the 02:00 UTC cutoff.
+Workaround: Compare record creation timestamps to 02:00 UTC. Do not infer eligibility from the local display alone.
+Status: UI fix planned; export scheduler is not affected.
+
+ISSUE NS-447: Duplicate webhook delivery after endpoint timeout
+Symptom: A consumer may see the same event more than once when its endpoint completes work but fails to return a 2xx response before timeout.
+Workaround: Deduplicate using the event ID and acknowledge receipt quickly. Delivery is at-least-once by design. The delivery attempt number is not a unique event identifier.
+Status: Expected behavior; consumer guidance is available in webhook documentation.
+
+ISSUE NS-462: Repeated 401 after key rotation
+Symptom: A subset of workers continues to send a revoked key after the 24-hour overlap window.
+Workaround: Update the worker secret, restart the affected workload, and confirm X-Northstar-Key is populated from the secret manager. Never extend key overlap merely to hide an incomplete rollout.
+Status: Configuration issue; service-side fix not planned.
+
+For all reports include UTC time, request ID where available, and sanitized evidence. Never attach keys, signature secrets, or raw personal data.

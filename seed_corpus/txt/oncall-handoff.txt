@@ -1,0 +1,22 @@
+ON-CALL HANDOFF NOTE
+Handoff date: 2026-10-04 08:00 UTC
+Outgoing owner: Platform Rotation A
+Incoming owner: Platform Rotation B
+
+CURRENT WATCH
+- No active Sev-1 or Sev-2 incident at handoff time.
+- Review dispatch queue age after the scheduled batch window.
+- INC-204 follow-up: concurrent migration-plus-API load test is required before future schema releases. The connection pool maximum is 40.
+
+PENDING CHECKS
+1. Confirm the database connection-wait panel is still receiving data.
+2. Verify the deployment dashboard captures stable pre-deployment p95 before a canary.
+3. Review any DLQ-17 spikes. More than 25 in ten minutes is an investigation threshold.
+4. For queue delays, investigate oldest dispatch-message age above 180 seconds for five minutes.
+
+ESCALATION REMINDERS
+- Initial incident update due within 15 minutes of declaring an incident; continue at least every 30 minutes while customer impact persists.
+- For a suspected customer-data exposure, classify as Sev-1 until the security owner triages.
+- Include UTC timestamps and request IDs in tickets. Redact credentials and unnecessary payload data.
+
+This handoff is a time-stamped snapshot, not the source of truth for permanent policy.
