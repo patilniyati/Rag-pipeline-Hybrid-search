@@ -84,7 +84,11 @@ def full_row(case, answerer, judge, separate):
             "correctness": correctness, "correctness_reason": why,
             "faithfulness": faith, "unsupported_claims": unsupported,
             "citation_precision": precision, "citation_coverage": coverage,
+            "claims": [{"status": c["status"], "claim": c["claim"], "cites": c["cites"]}
+                       for c in claims],
             "confidence": a.confidence.get("composite")}
+
+
 
 
 def run_strategy(strategy: str, cases: list[dict], run_dir: Path, retrieval_only: bool = False):

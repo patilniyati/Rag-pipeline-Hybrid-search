@@ -4,6 +4,7 @@ from src.indexing import keyword
 from src.indexing.embedder import Embedder
 from src.indexing.settings import load_settings
 from src.indexing.store import open_store
+from .diversify import cap_per_source
 
 from .dense import DenseRetriever
 from .fusion import weighted_rrf
@@ -39,9 +40,10 @@ class Retriever:
         if rerank and rows:
             if self._reranker is None:
                 self._reranker = Reranker(s.reranker_model)
-            ranked = self._reranker.rerank(query, rows, s.final_k)
-            return [r for r in ranked if r["rerank_score"] >= s.min_rerank_score]
-        return rows[:s.final_k]
+            ranked = self._reranker.rerank(query, rows, len(rows))     # keep all, ordered
+            ranked = [r for r in ranked if r["rerank_score"] >= s.min_rerank_score]
+            return cap_per_source(ranked, s.max_per_source, s.final_k)
+        return cap_per_source(rows, s.max_per_source, s.final_k)
 
     def _attach(self, fused, hits):
         by_id = {r["id"]: r for r in self.store.get([cid for cid, _ in fused])}

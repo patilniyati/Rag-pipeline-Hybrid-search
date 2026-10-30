@@ -14,6 +14,7 @@ class RetrievalSettings:
     final_k: int = 5
     min_rerank_score: float = -5.0     # drop chunks the reranker judges irrelevant
     reranker_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    max_per_source: int = 0       # 0 = no cap; 2 means at most 2 chunks per document
 
 
 def load_retrieval_settings(path: str = "retrieval_config.json") -> RetrievalSettings:

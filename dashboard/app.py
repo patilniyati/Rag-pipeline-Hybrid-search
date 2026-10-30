@@ -3,12 +3,17 @@ import re
 
 import requests
 import streamlit as st
+import html as _html
+
+from styles import card, inject
+from styles import card, hero, inject
 
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 HEADERS = {"X-API-Key": os.environ["API_KEY"]} if os.getenv("API_KEY") else {}
 ICON = {"verified": "✅", "partial": "🟡", "unsupported": "❌", "uncited": "⚪"}
 
-st.set_page_config(page_title="Docs RAG", layout="wide")
+st.set_page_config(page_title="Subtext RAG", layout="wide")
+inject()
 
 
 def api(method, path, payload=None):
@@ -34,6 +39,10 @@ def fmt(v):
 def linkify(text):
     return re.sub(r"\[(\d+)\]", r"[[\1]](#source-\1)", text)      # [2] links to chunk 2
 
+def linkify_html(text):
+    safe = _html.escape(text)                      # escape first, then add our own links
+    return re.sub(r"\[(\d+)\]", r'<a href="#source-\1">[\1]</a>', safe).replace("\n", "<br>")
+
 
 # ---- sidebar
 health = api("get", "/v1/health")
@@ -49,8 +58,10 @@ with st.sidebar.expander("Indexed documents"):
     st.dataframe(docs["items"], hide_index=True)
 
 # ---- ask (result kept in session_state, so toggling never re-calls the LLM)
-with st.form("ask"):
-    question = st.text_input("Ask a question about the documents")
+hero("Welcome to Subtext!", "Ask anything about your documents and get answers with verified citations.")
+with st.form("ask", border=False):
+    question = st.text_input("Question", placeholder="Ask a question about your documents...",
+                             label_visibility="collapsed")
     submitted = st.form_submit_button("Ask")
 
 if submitted and question.strip():
@@ -67,7 +78,7 @@ if not res:
 # ---- answer
 st.markdown("### Answer")
 if res["status"] == "answered":
-    st.markdown(linkify(res["answer"]))
+    st.markdown(f'<div class="glass">{linkify_html(res["answer"])}</div>', unsafe_allow_html=True)
 else:
     st.warning(res["answer"])
     st.write(res["not_found"])
@@ -94,21 +105,18 @@ if c.get("missing_parts"):
 if res["citations"]:
     st.markdown("### Citation checks")
     for item in res["citations"]:
-        st.markdown(f"{ICON.get(item['status'], '⚪')} **{item['status']}**: {item['claim']}")
-        for chk in item["checks"]:
-            st.caption(f"[{chk['n']}] {chk['verdict']}: {chk.get('reason', '')}")
+        reasons = " · ".join(f"[{k['n']}] {k['verdict']}: {k.get('reason', '')}" for k in item["checks"])
+        card(f"{ICON.get(item['status'], '⚪')} {item['status']}: {item['claim']}", reasons)
 
 # ---- retrieved chunks, ranked
 cited = {n for item in res["citations"] for n in item["cites"]}
 st.markdown("### Retrieved chunks (ranked by relevance)")
 for s in res["sources"]:
-    st.subheader(f"[{s['n']}] {s['source']}", anchor=f"source-{s['n']}")
     where = f"page {s['page']} · " if s["page"] else ""
-    st.caption(f"{'cited · ' if s['n'] in cited else ''}{where}{s['heading']} · "
-               f"rerank {fmt(s['rerank_score'])} · fused {fmt(s['fused_score'])} · "
-               f"dense #{s['dense_rank'] or '–'} · sparse #{s['sparse_rank'] or '–'}")
-    with st.expander("Show text", expanded=s["n"] in cited):
-        st.text(s["text"])
+    meta = (f"{where}{s['heading']} · rerank {fmt(s['rerank_score'])} · fused {fmt(s['fused_score'])} · "
+            f"dense #{s['dense_rank'] or '–'} · sparse #{s['sparse_rank'] or '–'}")
+    card(f"[{s['n']}] {s['source']}" + ("  ·  cited" if s["n"] in cited else ""),
+         meta, s["text"], cited=s["n"] in cited, anchor=f"source-{s['n']}")
 
 # ---- hybrid vs dense-only (retrieval only, no LLM cost)
 if compare:

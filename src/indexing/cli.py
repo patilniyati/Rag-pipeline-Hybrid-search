@@ -6,7 +6,7 @@ from . import keyword
 from .embedder import Embedder
 from .pipeline import check_sync, index_chunks, load_chunks
 from .settings import load_settings
-from .store import VectorStore
+from .store import open_store
 
 
 def main():
@@ -26,7 +26,7 @@ def main():
     if a.check:
         check_sync(s, a.strategy)
     elif a.query:
-        store = VectorStore(root / "chroma", s.model)
+        store = open_store(a.strategy, s)
         print("\nBM25 (keywords):")
         for r in store.get(keyword.search(keyword.load(root / "bm25.pkl"), a.query, 3)):
             print(f"  {r['source']} p{r['page']} [{r['heading']}] {r['text'][:80]!r}")
