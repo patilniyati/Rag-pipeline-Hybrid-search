@@ -46,7 +46,7 @@ def linkify_html(text):
 
 # ---- sidebar
 health = api("get", "/v1/health")
-st.sidebar.title("Docs RAG")
+st.sidebar.title("Hybrid RAG")
 if health["status"] != "ok":
     st.sidebar.warning("Some indexes are unreachable.")
 strategy = st.sidebar.selectbox("Chunking strategy", list(health["strategies"]))
