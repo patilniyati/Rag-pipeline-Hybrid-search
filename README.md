@@ -1,3 +1,9 @@
+
+
+https://github.com/user-attachments/assets/0e69b208-8014-4cca-a168-b3babc7d8175
+
+
+
 # Subtext: Hybrid-Search RAG over Internal Docs
 
 A retrieval-augmented generation system for internal documentation. It combines dense and keyword search, reranks the results, answers only from retrieved context, and checks every citation with an LLM judge. It ships with an API, a dashboard, and an evaluation framework.
